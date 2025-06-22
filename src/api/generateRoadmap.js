@@ -13,6 +13,18 @@ export async function generateRoadmap(formData) {
         System Prompt:
         You are an expert project planning assistant. Your task is to generate a comprehensive, step-by-step project roadmap based on user-provided details. The output MUST be a valid JSON object adhering to the schema provided below. Do not include any explanatory text, comments, or markdown formatting like \`\`\`json around the JSON object itself.
 
+        CRITICAL: Your response must be ONLY a valid JSON object that can be parsed by JSON.parse(). 
+
+        JSON FORMATTING REQUIREMENTS:
+        - Start your response with { and end with }
+        - Use double quotes (") for all strings, never single quotes (')
+        - Ensure all brackets [ ] and braces { } are properly matched
+        - Include commas after every property except the last one in each object/array
+        - Do not include trailing commas
+        - Do not include any text before or after the JSON object
+        - Do not use markdown formatting like \`\`\`json
+        - Escape any quotes within strings using \"
+
         User-Provided Details:
         - Project Goal: ${formData.projectGoal}
         - Initial Ideas/Resources/Blockers: ${formData.initialIdeas || 'Not specified'}
@@ -63,7 +75,7 @@ export async function generateRoadmap(formData) {
             ]
         }
 
-        Generate ONLY the JSON object.
+        Generate ONLY the JSON object following this exact structure.
     `;
 
     const response = await ai.models.generateContent({
@@ -85,4 +97,3 @@ export async function generateRoadmap(formData) {
         throw new Error('Invalid JSON returned: ' + jsonStr);
     }
 }
-
