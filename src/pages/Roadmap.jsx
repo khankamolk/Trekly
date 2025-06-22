@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { CheckCircle, PawPrint, User, Book, Target, Award, Clock, Star, Trophy, Gamepad2, Code, Palette, Bug, X, BarChart3, Send, Image, MapPin} from 'lucide-react';
+import { CheckCircle, Calendar, User, Book, Target, Award, Clock, Star, Trophy, Gamepad2, Code, Palette, Bug, X, Play, BarChart3, MessageCircle, Send, Image, Sparkles } from 'lucide-react';
 import Anthropic from '@anthropic-ai/sdk';
 import mentorCharacter from '../assets/chatpal.png'; // adjust path as needed
 
@@ -19,12 +19,13 @@ const VerticalGameDevRoadmap = () => {
   const navigate = useNavigate();
   const roadmapData = useMemo(() => state?.roadmap, [state]);
   
-  
   useEffect(() => {
     if (!roadmapData) {
       navigate('/');
     }
+    
   }, [roadmapData, navigate]);
+
 
   // State variables
   const [completedSteps, setCompletedSteps] = useState([]);
@@ -35,17 +36,12 @@ const VerticalGameDevRoadmap = () => {
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [completedActivities, setCompletedActivities] = useState(() => {
-  // Load saved activities from localStorage on component mount
-  const saved = localStorage.getItem('roadmap-completed-activities');
-  return saved ? JSON.parse(saved) : {};
-});
+  const [completedActivities, setCompletedActivities] = useState({});
 
   // Early return if no roadmap data
   if (!roadmapData) {
     return <div>Loading...</div>;
   }
-  console.log(JSON.stringify(roadmapData, null, 2));
 
   const iconMap = {
     1: Target,      // Setup
@@ -175,29 +171,29 @@ const isActivityCompleted = (stepId, activityIndex) => {
     const aiPersonality = roadmapData?.aiMentor?.personality || 'encouraging and supportive';
     
     return `You are ${aiName}, an experienced and ${aiPersonality} mentor helping someone learn through a structured roadmap called "${roadmapTitle}".
-      CURRENT CONTEXT:
-      - Student is on Step ${currentStep}${currentStepData ? `: "${currentStepData.title}"` : ''}
-      ${currentStepData ? `- World: ${currentStepData.worldTitle}
-      - Difficulty: ${currentStepData.difficulty}/5
-      - Estimated Time: ${currentStepData.estimatedTime}` : ''}
-      - Progress: ${completedSteps.length}/${totalSteps} steps completed (${currentXP} XP earned)
 
-      YOUR ROLE:
-      - Be encouraging and supportive
-      - Provide specific, actionable advice
-      - Help troubleshoot issues
-      - Explain concepts clearly for beginners
-      - Suggest resources when helpful
-      - Celebrate progress and achievements
+CURRENT CONTEXT:
+- Student is on Step ${currentStep}${currentStepData ? `: "${currentStepData.title}"` : ''}
+${currentStepData ? `- World: ${currentStepData.worldTitle}
+- Difficulty: ${currentStepData.difficulty}/5
+- Estimated Time: ${currentStepData.estimatedTime}` : ''}
+- Progress: ${completedSteps.length}/${totalSteps} steps completed (${currentXP} XP earned)
 
-      TONE:
-      - Friendly and approachable
-      - Use appropriate terminology for the subject matter
-      - Include relevant emojis occasionally
-      - Be concise but thorough
+YOUR ROLE:
+- Be encouraging and supportive
+- Provide specific, actionable advice
+- Help troubleshoot issues
+- Explain concepts clearly for beginners
+- Suggest resources when helpful
+- Celebrate progress and achievements
 
-      Remember: Your goal is to help them succeed in their learning journey while building confidence for the path ahead.
-    `;
+TONE:
+- Friendly and approachable
+- Use appropriate terminology for the subject matter
+- Include relevant emojis occasionally
+- Be concise but thorough
+
+Remember: Your goal is to help them succeed in their learning journey while building confidence for the path ahead.`;
   }
 
   // UPDATED: Direct Claude API call function
@@ -347,6 +343,7 @@ What would you like assistance with?`;
     const isAccessible = isStepAccessible(step.stepId);
     const isCurrent = step.stepId === getCurrentStep();
     const isFinalStep = step.stepId === totalSteps;
+    const Icon = iconMap[step.stepId];
     
     return (
       <div key={step.stepId} className="step-container">
@@ -372,20 +369,12 @@ What would you like assistance with?`;
           onMouseLeave={() => setHoveredStep(null)}
           onClick={() => handleStepClick(step)}
         >
-          {isFinalStep ? (
-            <Trophy className="step-icon" />
-          ) : isCompleted ? (
+          {isCompleted ? (
             <CheckCircle className="step-icon" />
-          ) : isCurrent ? (
-            <MapPin className="step-icon" />
           ) : (
-            <PawPrint
-               className="step-icon"
-               style={{
-                transform: `rotate(180deg) ${step.stepId % 2 === 0 ? 'scaleX(-1)' : ''}`,
-              }}
-            />
+            <Icon className="step-icon" />
           )}
+          
           {/* Step number badge */}
           <div className={`step-badge ${isCompleted ? 'step-badge-completed' : 'step-badge-default'}`}>
             {step.stepId}
@@ -540,7 +529,7 @@ What would you like assistance with?`;
                       <Trophy className="modal-card-icon" />
                       <span className="modal-card-title">Reward</span>
                     </div>
-                    <span className="modal-card-content">{expandedStep.rewards?.xp || 0} XP - Keep up the good work!</span>
+                    <span className="modal-card-content">{expandedStep.rewards?.xp || 0} XP</span>
                   </div>
                 </div>
 
