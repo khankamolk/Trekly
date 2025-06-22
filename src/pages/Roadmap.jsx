@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { CheckCircle, Calendar, User, Book, Target, Award, Clock, Star, Trophy, Gamepad2, Code, Palette, Bug, X, Play, BarChart3 } from 'lucide-react';
 import '../styles/Roadmap.css';
+import roadmapData from '../data.json';
 
 const VerticalGameDevRoadmap = () => {
   const [completedSteps, setCompletedSteps] = useState([]); // Demo: first 3 steps completed
@@ -8,280 +9,7 @@ const VerticalGameDevRoadmap = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [expandedStep, setExpandedStep] = useState(null);
 
-  // This would be imported from '../data.json' in a real app
-  const roadmapData = {
-    "title": "Awesome Project",
-    "totalDuration": "15 days",
-    "difficulty": "beginner",
-    "avatar": {
-      "startingLevel": 1,
-      "totalXPNeeded": 1000,
-      "currentXP": 0
-    },
-    "worlds": [
-      {
-        "worldId": 1,
-        "title": "Foundation & Engine Basics",
-        "description": "Setting up your game development environment and learning the fundamental concepts of a game engine.",
-        "duration": "Days 1-4",
-        "color": "#A78BFA",
-        "steppingStones": [
-          {
-            "stepId": 1,
-            "title": "Choose Your Engine & Setup",
-            "description": "Research popular industry-standard game engines (Unity, Unreal Engine). Choose one based on resources and personal preference. Install the engine and set up your first project.",
-            "estimatedTime": "6 hours",
-            "difficulty": 2,
-            "activities": [
-              "Watch introductory videos on Unity vs Unreal",
-              "Download and install chosen engine",
-              "Create a new 2D project",
-              "Familiarize yourself with the editor layout via tutorials"
-            ],
-            "deliverable": "Game engine installed, empty project created, basic editor navigation understood.",
-            "resources": [
-              "Official Unity/Unreal Engine getting started guides",
-              "YouTube channels for beginner game dev tutorials (e.g., Brackeys - Unity, Unreal Engine official channel)"
-            ],
-            "successCriteria": "Successfully launched the engine and created a new project. Can identify key editor windows (Hierarchy, Project, Inspector, Scene).",
-            "rewards": {
-              "xp": 100,
-              "skillUnlock": "Game Engine Familiarity (Level 1)"
-            }
-          },
-          {
-            "stepId": 2,
-            "title": "Core Engine Concepts",
-            "description": "Learn about the basic building blocks of your chosen engine: GameObjects (or Actors), Components, and Scenes (or Levels).",
-            "estimatedTime": "7 hours",
-            "difficulty": 2,
-            "activities": [
-              "Watch tutorials explaining GameObjects/Actors and their properties",
-              "Learn about the role of Components/Blueprints",
-              "Understand how Scenes/Levels work",
-              "Create simple GameObjects/Actors in the scene"
-            ],
-            "deliverable": "Basic understanding of engine hierarchy and components. Can create and manipulate simple objects in a scene.",
-            "rewards": {
-              "xp": 80
-            }
-          },
-          {
-            "stepId": 3,
-            "title": "Scripting Basics",
-            "description": "Introduce yourself to the primary scripting language (C# for Unity, Blueprints or C++ for Unreal). Learn how to create scripts/blueprints and attach them to objects.",
-            "estimatedTime": "7 hours",
-            "difficulty": 3,
-            "activities": [
-              "Watch beginner tutorials on C# scripting (Unity) or Blueprints (Unreal)",
-              "Learn about variables, data types, and basic functions (Start/Awake, Update/Tick)",
-              "Write a very simple script (e.g., print a message to console)",
-              "Attach the script to a GameObject/Actor"
-            ],
-            "deliverable": "Created and successfully ran a basic script attached to an object.",
-            "rewards": {
-              "xp": 100,
-              "skillUnlock": "Basic Scripting (Engine-Specific)"
-            }
-          },
-          {
-            "stepId": 4,
-            "title": "Player Input & Movement",
-            "description": "Implement basic player movement based on keyboard input.",
-            "estimatedTime": "6 hours",
-            "difficulty": 3,
-            "activities": [
-              "Watch tutorials on handling player input (Input Manager/System)",
-              "Learn different methods for object movement (transform, physics)",
-              "Write a script to move an object based on input"
-            ],
-            "deliverable": "A controllable object that moves left/right/up/down based on keyboard input.",
-            "rewards": {
-              "xp": 90
-            }
-          }
-        ]
-      },
-      {
-        "worldId": 2,
-        "title": "World & Interactions",
-        "description": "Adding a basic environment to your game and enabling simple interactions.",
-        "duration": "Days 5-8",
-        "color": "#4ADE80",
-        "steppingStones": [
-          {
-            "stepId": 5,
-            "title": "Tilemaps & Environment Setup",
-            "description": "Learn how to use Tilemaps (Unity) or Tiled workflow (Unreal) to create 2D levels using sprite assets.",
-            "estimatedTime": "6 hours",
-            "difficulty": 3,
-            "activities": [
-              "Watch tutorials on using the Tilemap system (Unity) or importing/using Tiled maps (Unreal)",
-              "Import or create a simple tile set (can be placeholder squares)",
-              "Design a small test level using the tilemap/tiled approach"
-            ],
-            "deliverable": "A scene with a basic level structure built using tile-based assets.",
-            "rewards": {
-              "xp": 90
-            }
-          },
-          {
-            "stepId": 6,
-            "title": "Collisions & Basic Physics",
-            "description": "Add collision detection to your player and environmental tiles to prevent walking through walls.",
-            "estimatedTime": "7 hours",
-            "difficulty": 3,
-            "activities": [
-              "Watch tutorials on 2D physics and collision components (Colliders, Rigidbody)",
-              "Add necessary components to player and tiles",
-              "Configure physics settings if needed"
-            ],
-            "deliverable": "Player object can no longer move through solid parts of the tiled environment.",
-            "rewards": {
-              "xp": 90
-            }
-          },
-          {
-            "stepId": 7,
-            "title": "Simple Object Interaction",
-            "description": "Learn how to detect when the player interacts with an object (e.g., clicking on it, walking into a trigger area). Implement a basic action like displaying a message.",
-            "estimatedTime": "7 hours",
-            "difficulty": 3,
-            "activities": [
-              "Watch tutorials on raycasting, trigger volumes, or click detection",
-              "Create a simple interactive object (e.g., a sign post)",
-              "Write a script to detect player interaction and trigger an event (e.g., show text in console)"
-            ],
-            "deliverable": "An object in the scene that triggers a response when the player interacts with it.",
-            "rewards": {
-              "xp": 90
-            }
-          }
-        ]
-      },
-      {
-        "worldId": 3,
-        "title": "Game Mechanics & UI Concepts",
-        "description": "Exploring simplified versions of core Stardew Valley mechanics and implementing basic user interface elements.",
-        "duration": "Days 9-12",
-        "color": "#34D399",
-        "steppingStones": [
-          {
-            "stepId": 8,
-            "title": "Basic Inventory System Concept",
-            "description": "Design the data structure for a simple inventory (e.g., an array or list). Learn how to add and potentially display items (even if just text).",
-            "estimatedTime": "7 hours",
-            "difficulty": 4,
-            "activities": [
-              "Research inventory system data structures",
-              "Watch tutorials on managing data within scripts",
-              "Write code to represent a player's inventory",
-              "Add placeholder items to the inventory"
-            ],
-            "deliverable": "A script that holds a collection of 'items' (represented simply, e.g., by name).",
-            "rewards": {
-              "xp": 110,
-              "badge": "Data Architect"
-            }
-          },
-          {
-            "stepId": 9,
-            "title": "Farming/Resource Gathering Concept",
-            "description": "Implement a simplified mechanic related to Stardew Valley's core loop, such as interacting with a resource node to 'collect' an item into the inventory concept.",
-            "estimatedTime": "7 hours",
-            "difficulty": 4,
-            "activities": [
-              "Design a simple resource node object (e.g., a rock or tree)",
-              "Combine interaction logic from World 2 with inventory logic from Step 1",
-              "Write a script to 'gather' an item from the node and add it to the inventory when interacted with"
-            ],
-            "deliverable": "An interactive object that, upon interaction, adds an item to the player's conceptual inventory.",
-            "rewards": {
-              "xp": 120
-            }
-          },
-          {
-            "stepId": 10,
-            "title": "Basic UI Implementation",
-            "description": "Use your Figma/Adobe skills to design basic UI elements (like an inventory slot or health bar). Implement these UI elements in the game engine using the engine's UI system.",
-            "estimatedTime": "7 hours",
-            "difficulty": 3,
-            "activities": [
-              "Design simple UI mockups in Figma/Adobe (e.g., inventory slot icon/background)",
-              "Learn the basics of the engine's UI system (Canvas, UI elements like Images, Text)",
-              "Create a simple UI display in the game scene (e.g., display text indicating collected items)",
-              "Integrate the basic inventory count display with the UI element"
-            ],
-            "deliverable": "A simple visual UI element is displayed on screen, potentially showing dynamic game data (like the number of collected items).",
-            "rewards": {
-              "xp": 110,
-              "skillUnlock": "In-Engine UI Implementation"
-            }
-          }
-        ]
-      },
-      {
-        "worldId": 4,
-        "title": "Polish, Testing & Next Steps",
-        "description": "Refining your prototype, testing what you've built, and planning for future development.",
-        "duration": "Days 13-15",
-        "color": "#F87171",
-        "steppingStones": [
-          {
-            "stepId": 11,
-            "title": "Bug Fixing & Refinement",
-            "description": "Playtest your prototype. Identify and fix any bugs in movement, interaction, or UI. Improve the feel or clarity where possible.",
-            "estimatedTime": "6 hours",
-            "difficulty": 3,
-            "activities": [
-              "Thoroughly test player movement and object interaction",
-              "Look for errors in the engine's console",
-              "Refactor simple code segments for clarity",
-              "Make minor adjustments based on playtesting"
-            ],
-            "deliverable": "A more stable and polished basic prototype.",
-            "rewards": {
-              "xp": 80
-            }
-          },
-          {
-            "stepId": 12,
-            "title": "Basic Sound & Visual Polish",
-            "description": "If time permits, add simple visual effects (e.g., particle system on interaction) or basic sound effects.",
-            "estimatedTime": "5 hours",
-            "difficulty": 2,
-            "activities": [
-              "Watch tutorials on adding particle effects or playing sound effects",
-              "Find free placeholder sound/particle assets",
-              "Implement one or two simple visual/audio cues (e.g., sound on interaction)"
-            ],
-            "deliverable": "The prototype includes at least one basic visual effect or sound effect.",
-            "rewards": {
-              "xp": 70
-            }
-          },
-          {
-            "stepId": 13,
-            "title": "Project Reflection & Next Steps",
-            "description": "Review what you learned, document your progress, and plan what features you would add next if continuing the project. Reflect on the challenges and successes.",
-            "estimatedTime": "4 hours",
-            "difficulty": 1,
-            "activities": [
-              "Write down key learnings about the engine and game development",
-              "Outline features for a potential 'Awesome Project v2'",
-              "Identify areas where you need further learning",
-              "Organize your project files"
-            ],
-            "deliverable": "A document outlining learnings, project status, and future plans.",
-            "rewards": {
-              "xp": 50,
-              "badge": "Planner"
-            }
-          }
-        ]
-      }
-    ]
-  };
+
 
   const iconMap = {
     1: Target,      // Setup
@@ -296,7 +24,7 @@ const VerticalGameDevRoadmap = () => {
     10: Palette,    // UI
     11: Bug,        // Bug Fixing
     12: Star,       // Polish
-    13: Trophy      // Reflection
+    13: Award      // Reflection
   };
 
   const allSteps = roadmapData.worlds.flatMap(world => 
@@ -388,48 +116,50 @@ const VerticalGameDevRoadmap = () => {
   };
 
   const renderStep = (step, index) => {
-    const isCompleted = isStepCompleted(step.stepId);
-    const isAccessible = isStepAccessible(step.stepId);
-    const isCurrent = step.stepId === getCurrentStep();
-    const Icon = iconMap[step.stepId];
-    
-    return (
-      <div key={step.stepId} className="step-container">
-        {/* Connection line */}
-        {index > 0 && (
-          <div className="connection-line"></div>
+  const isCompleted = isStepCompleted(step.stepId);
+  const isAccessible = isStepAccessible(step.stepId);
+  const isCurrent = step.stepId === getCurrentStep();
+  const isFinalStep = step.stepId === totalSteps; // Add this line
+  const Icon = iconMap[step.stepId];
+  
+  return (
+    <div key={step.stepId} className="step-container">
+      {/* Connection line */}
+      {index > 0 && (
+        <div className="connection-line"></div>
+      )}
+      
+      {/* Step circle */}
+      <div
+        className={`step-circle ${
+          isFinalStep ? 'step-final' : ''
+        } ${
+          isCompleted 
+            ? 'step-completed' 
+            : isCurrent && isAccessible
+            ? 'step-current'
+            : isAccessible
+            ? 'step-accessible'
+            : 'step-locked'
+        }`}
+        onMouseEnter={(e) => handleStepHover(step, e)}
+        onMouseLeave={() => setHoveredStep(null)}
+        onClick={() => handleStepClick(step)}
+      >
+        {isCompleted ? (
+          <CheckCircle className="step-icon" />
+        ) : (
+          <Icon className="step-icon" />
         )}
         
-        {/* Step circle */}
-        <div
-          className={`step-circle ${
-            isCompleted 
-              ? 'step-completed' 
-              : isCurrent && isAccessible
-              ? 'step-current'
-              : isAccessible
-              ? 'step-accessible'
-              : 'step-locked'
-          }`}
-          onMouseEnter={(e) => handleStepHover(step, e)}
-          onMouseLeave={() => setHoveredStep(null)}
-          onClick={() => handleStepClick(step)}
-        >
-          {isCompleted ? (
-            <CheckCircle className="step-icon" />
-          ) : (
-            <Icon className="step-icon" />
-          )}
-          
-          {/* Step number badge */}
-          <div className={`step-badge ${isCompleted ? 'step-badge-completed' : 'step-badge-default'}`}>
-            {step.stepId}
-          </div>
+        {/* Step number badge */}
+        <div className={`step-badge ${isCompleted ? 'step-badge-completed' : 'step-badge-default'}`}>
+          {step.stepId}
         </div>
       </div>
-    );
-  };
-
+    </div>
+  );
+};
   const renderRoadmapContent = () => {
     const elements = [];
     let stepIndex = 0;
