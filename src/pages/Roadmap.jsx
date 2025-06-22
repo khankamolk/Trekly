@@ -1,16 +1,31 @@
-import React, { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { CheckCircle, Calendar, User, Book, Target, Award, Clock, Star, Trophy, Gamepad2, Code, Palette, Bug, X, Play, BarChart3 } from 'lucide-react';
 import '../styles/Roadmap.css';
 import roadmapData from '../data.json';
 
 const VerticalGameDevRoadmap = () => {
+  const { state } = useLocation();
+  const navigate = useNavigate();
+  const roadmapData = useMemo(() => state?.roadmap, [state]);
+  console.log(JSON.stringify(roadmapData, null, 2));
+  
+  useEffect(() => {
+    if (!roadmapData) {
+      navigate('/');
+    }
+  }, [roadmapData, navigate]);
+
   const [completedSteps, setCompletedSteps] = useState([]); // Demo: first 3 steps completed
   const [hoveredStep, setHoveredStep] = useState(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [expandedStep, setExpandedStep] = useState(null);
 
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> 78bc1e475b2e9d51c27200f303d26dbab4d6e823
   const iconMap = {
     1: Target,      // Setup
     2: Code,        // Engine Concepts
