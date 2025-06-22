@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { CheckCircle, Calendar, User, Book, Target, Award, Clock, Star, Trophy, Gamepad2, Code, Palette, Bug, X, Play, BarChart3, MessageCircle, Send, Image, Sparkles } from 'lucide-react';
+import { CheckCircle, Calendar, User, Book, Target, Award, Clock, Star, Trophy, Gamepad2, Code, Palette, Bug, X, Play, BarChart3, MessageCircle, Send, Image, Sparkles, MapPin, PawPrint } from 'lucide-react';
 import Anthropic from '@anthropic-ai/sdk';
 import mentorCharacter from '../assets/chatpal.png'; // adjust path as needed
 
@@ -343,9 +343,8 @@ What would you like assistance with?`;
     const isAccessible = isStepAccessible(step.stepId);
     const isCurrent = step.stepId === getCurrentStep();
     const isFinalStep = step.stepId === totalSteps;
-    const Icon = iconMap[step.stepId];
     
-    return (
+        return (
       <div key={step.stepId} className="step-container">
         {/* Connection line */}
         {index > 0 && (
@@ -369,12 +368,20 @@ What would you like assistance with?`;
           onMouseLeave={() => setHoveredStep(null)}
           onClick={() => handleStepClick(step)}
         >
-          {isCompleted ? (
+          {isFinalStep ? (
+            <Trophy className="step-icon" />
+          ) : isCompleted ? (
             <CheckCircle className="step-icon" />
+          ) : isCurrent ? (
+            <MapPin className="step-icon" />
           ) : (
-            <Icon className="step-icon" />
+            <PawPrint
+               className="step-icon"
+               style={{
+                transform: `rotate(180deg) ${step.stepId % 2 === 0 ? 'scaleX(-1)' : ''}`,
+              }}
+            />
           )}
-          
           {/* Step number badge */}
           <div className={`step-badge ${isCompleted ? 'step-badge-completed' : 'step-badge-default'}`}>
             {step.stepId}
