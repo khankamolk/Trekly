@@ -1,10 +1,22 @@
-import React, { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { ChevronDown, ChevronUp, Star, Clock, Target, Users, Award, FileText } from 'lucide-react';
-import roadmapData from '../data.json';
 
 export default function Roadmap() {
+  const { state } = useLocation();
+  const navigate = useNavigate();
+  const roadmapData = useMemo(() => state?.roadmap, [state]);
+  console.log(JSON.stringify(roadmapData, null, 2));
+
   const [expandedStep, setExpandedStep] = useState(null);
   const [completedSteps, setCompletedSteps] = useState(new Set());
+
+  useEffect(() => {
+    if (!roadmapData) {
+      navigate('/');
+    }
+  }, [roadmapData, navigate]);
+
 
   // Calculate step positions dynamically
   const calculateStepPositions = () => {
