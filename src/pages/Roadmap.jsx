@@ -1,14 +1,22 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { CheckCircle, Calendar, User, Book, Target, Award, Clock, Star, Trophy, Gamepad2, Code, Palette, Bug, X, Play, BarChart3 } from 'lucide-react';
+import { CheckCircle, PawPrint, User, Book, Target, Award, Clock, Star, Trophy, Gamepad2, Code, Palette, Bug, X, BarChart3, Send, Image, MapPin} from 'lucide-react';
+import Anthropic from '@anthropic-ai/sdk';
+import mentorCharacter from '../assets/chatpal.png'; // adjust path as needed
+
 import '../styles/Roadmap.css';
-import roadmapData from '../data.json';
+
+// Create Claude client (put this outside the component)
+const anthropic = new Anthropic({
+  apiKey: import.meta.env.VITE_CLAUDE_API_KEY,
+  dangerouslyAllowBrowser: true // Required for browser usage
+});
 
 const VerticalGameDevRoadmap = () => {
   const { state } = useLocation();
   const navigate = useNavigate();
   const roadmapData = useMemo(() => state?.roadmap, [state]);
-  console.log(JSON.stringify(roadmapData, null, 2));
+  
   
   useEffect(() => {
     if (!roadmapData) {
@@ -16,11 +24,21 @@ const VerticalGameDevRoadmap = () => {
     }
   }, [roadmapData, navigate]);
 
-  const [completedSteps, setCompletedSteps] = useState([]); // Demo: first 3 steps completed
+  // State variables
+  const [completedSteps, setCompletedSteps] = useState([]);
   const [hoveredStep, setHoveredStep] = useState(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [expandedStep, setExpandedStep] = useState(null);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [chatInput, setChatInput] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
 
+  // Early return if no roadmap data
+  if (!roadmapData) {
+    return <div>Loading...</div>;
+  }
+  console.log(JSON.stringify(roadmapData, null, 2));
 
   const iconMap = {
     1: Target,      // Setup
@@ -35,7 +53,7 @@ const VerticalGameDevRoadmap = () => {
     10: Palette,    // UI
     11: Bug,        // Bug Fixing
     12: Star,       // Polish
-    13: Award      // Reflection
+    13: Award       // Reflection
   };
 
   const allSteps = roadmapData.worlds.flatMap(world => 
@@ -108,11 +126,184 @@ const VerticalGameDevRoadmap = () => {
     setExpandedStep(null);
   };
 
-  const getWorldForStep = (stepId) => {
-    return roadmapData.worlds.find(world => 
-      world.steppingStones.some(stone => stone.stepId === stepId)
-    );
+  // Helper function to convert file to base64
+  const fileToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        // Remove the data URL prefix (e.g., "data:image/jpeg;base64,")
+        const base64 = reader.result.split(',')[1];
+        resolve(base64);
+      };
+      reader.onerror = error => reject(error);
+    });
   };
+
+  // Build system prompt function
+  function buildSystemPrompt(context) {
+    const { currentStep, allSteps, completedSteps, totalSteps, currentXP, roadmapTitle, roadmapData } = context;
+    
+    // Find current step data
+    const currentStepData = allSteps.find(step => step.stepId === currentStep);
+    const aiName = roadmapData?.aiMentor?.name || 'Learning Mentor';
+    const aiPersonality = roadmapData?.aiMentor?.personality || 'encouraging and supportive';
+    
+    return `You are ${aiName}, an experienced and ${aiPersonality} mentor helping someone learn through a structured roadmap called "${roadmapTitle}".
+      CURRENT CONTEXT:
+      - Student is on Step ${currentStep}${currentStepData ? `: "${currentStepData.title}"` : ''}
+      ${currentStepData ? `- World: ${currentStepData.worldTitle}
+      - Difficulty: ${currentStepData.difficulty}/5
+      - Estimated Time: ${currentStepData.estimatedTime}` : ''}
+      - Progress: ${completedSteps.length}/${totalSteps} steps completed (${currentXP} XP earned)
+
+      YOUR ROLE:
+      - Be encouraging and supportive
+      - Provide specific, actionable advice
+      - Help troubleshoot issues
+      - Explain concepts clearly for beginners
+      - Suggest resources when helpful
+      - Celebrate progress and achievements
+
+      TONE:
+      - Friendly and approachable
+      - Use appropriate terminology for the subject matter
+      - Include relevant emojis occasionally
+      - Be concise but thorough
+
+      Remember: Your goal is to help them succeed in their learning journey while building confidence for the path ahead.
+    `;
+  }
+
+  // UPDATED: Direct Claude API call function
+  const sendMessageToClaude = async (message, imageFile = null) => {
+    setIsTyping(true);
+    
+    try {
+      const context = {
+        currentStep: getCurrentStep(),
+        allSteps,
+        completedSteps,
+        totalSteps,
+        currentXP,
+        roadmapTitle: roadmapData.title,
+        roadmapData
+      };
+
+      console.log('Sending message directly to Claude...');
+      console.log('Context:', context);
+
+      // Build system prompt
+      const systemPrompt = buildSystemPrompt(context);
+      
+      // Prepare message content
+      const messageContent = [
+        {
+          type: 'text',
+          text: message
+        }
+      ];
+
+      // Add image if provided
+      if (imageFile) {
+        try {
+          const base64Image = await fileToBase64(imageFile);
+          messageContent.push({
+            type: 'image',
+            source: {
+              type: 'base64',
+              media_type: imageFile.type,
+              data: base64Image
+            }
+          });
+          console.log('Image added to message');
+        } catch (imageError) {
+          console.error('Error processing image:', imageError);
+          // Continue without image
+        }
+      }
+
+      console.log('Calling Claude API directly...');
+
+      // Call Claude API directly
+      const response = await anthropic.messages.create({
+        model: 'claude-3-5-sonnet-20241022',
+        max_tokens: 1000,
+        system: systemPrompt,
+        messages: [
+          {
+            role: 'user',
+            content: messageContent
+          }
+        ]
+      });
+
+      console.log('Claude response received:', response);
+      
+      setChatMessages(prev => [
+        ...prev,
+        { type: 'user', content: message, image: imageFile },
+        { type: 'bot', content: response.content[0].text }
+      ]);
+
+    } catch (error) {
+      console.error('Chat error details:', error);
+      setChatMessages(prev => [
+        ...prev,
+        { type: 'user', content: message, image: imageFile },
+        { type: 'bot', content: `Error: ${error.message}` }
+      ]);
+    } finally {
+      setIsTyping(false);
+      setChatInput('');
+    }
+  };
+
+  const initializeChat = () => {
+    if (chatMessages.length === 0) {
+      const currentStepData = allSteps.find(s => s.stepId === getCurrentStep());
+      const aiName = roadmapData?.aiMentor?.name || 'Learning Mentor';
+      const welcomeMessage = `Hi! I'm ${aiName}
+
+Welcome to ${roadmapData.title}! 
+
+Your current progress:
+- ✅ You've completed ${completedSteps.length}/${totalSteps} steps
+- 🏆 You've earned ${currentXP} XP so far
+- 🎯 Next step: ${currentStepData ? `${currentStepData.title} (Step ${currentStepData.stepId})` : 'All steps completed! 🎉'}
+
+How can I help you today? I can:
+- Explain concepts in detail
+- Help troubleshoot issues
+- Review your progress
+- Analyze screenshots of your work
+- Guide you through any step
+- Answer questions about your learning journey
+
+What would you like assistance with?`;
+
+      setChatMessages([{ type: 'bot', content: welcomeMessage }]);
+    }
+  };
+
+  const handleChatSubmit = (e) => {
+    e.preventDefault();
+    console.log('Form submitted with input:', chatInput);
+    if (chatInput.trim()) {
+      sendMessageToClaude(chatInput.trim());
+    }
+  };
+
+  const handleImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file && chatInput.trim()) {
+      sendMessageToClaude(chatInput.trim(), file);
+    } else if (file) {
+      sendMessageToClaude("I've uploaded an image. Can you help me analyze this?", file);
+    }
+  };
+
+  // ... rest of your render methods (renderWorldHeader, renderStep, renderRoadmapContent) stay the same ...
 
   const renderWorldHeader = (world) => {
     return (
@@ -127,50 +318,58 @@ const VerticalGameDevRoadmap = () => {
   };
 
   const renderStep = (step, index) => {
-  const isCompleted = isStepCompleted(step.stepId);
-  const isAccessible = isStepAccessible(step.stepId);
-  const isCurrent = step.stepId === getCurrentStep();
-  const isFinalStep = step.stepId === totalSteps; // Add this line
-  const Icon = iconMap[step.stepId];
-  
-  return (
-    <div key={step.stepId} className="step-container">
-      {/* Connection line */}
-      {index > 0 && (
-        <div className="connection-line"></div>
-      )}
-      
-      {/* Step circle */}
-      <div
-        className={`step-circle ${
-          isFinalStep ? 'step-final' : ''
-        } ${
-          isCompleted 
-            ? 'step-completed' 
-            : isCurrent && isAccessible
-            ? 'step-current'
-            : isAccessible
-            ? 'step-accessible'
-            : 'step-locked'
-        }`}
-        onMouseEnter={(e) => handleStepHover(step, e)}
-        onMouseLeave={() => setHoveredStep(null)}
-        onClick={() => handleStepClick(step)}
-      >
-        {isCompleted ? (
-          <CheckCircle className="step-icon" />
-        ) : (
-          <Icon className="step-icon" />
+    const isCompleted = isStepCompleted(step.stepId);
+    const isAccessible = isStepAccessible(step.stepId);
+    const isCurrent = step.stepId === getCurrentStep();
+    const isFinalStep = step.stepId === totalSteps;
+    
+    return (
+      <div key={step.stepId} className="step-container">
+        {/* Connection line */}
+        {index > 0 && (
+          <div className="connection-line"></div>
         )}
         
-        {/* Step number badge */}
-        <div className={`step-badge ${isCompleted ? 'step-badge-completed' : 'step-badge-default'}`}>
-          {step.stepId}
+        {/* Step circle */}
+        <div
+          className={`step-circle ${
+            isFinalStep ? 'step-final' : ''
+          } ${
+            isCompleted 
+              ? 'step-completed' 
+              : isCurrent && isAccessible
+              ? 'step-current'
+              : isAccessible
+              ? 'step-accessible'
+              : 'step-locked'
+          }`}
+          onMouseEnter={(e) => handleStepHover(step, e)}
+          onMouseLeave={() => setHoveredStep(null)}
+          onClick={() => handleStepClick(step)}
+        >
+          {isFinalStep ? (
+            <Trophy className="step-icon" />
+          ) : isCompleted ? (
+            <CheckCircle className="step-icon" />
+          ) : isCurrent ? (
+            <MapPin className="step-icon" />
+          ) : (
+            <PawPrint
+               className="step-icon"
+               style={{
+                transform: `rotate(180deg) ${step.stepId % 2 === 0 ? 'scaleX(-1)' : ''}`,
+              }}
+            />
+          )}
+          {/* Step number badge */}
+          <div className={`step-badge ${isCompleted ? 'step-badge-completed' : 'step-badge-default'}`}>
+            {step.stepId}
+          </div>
         </div>
       </div>
-    </div>
-  );
-};
+    );
+  };
+
   const renderRoadmapContent = () => {
     const elements = [];
     let stepIndex = 0;
@@ -213,11 +412,10 @@ const VerticalGameDevRoadmap = () => {
                 <Clock className="w-4 h-4" />
                 {roadmapData.totalDuration}
             </span>
-
             <span className="difficulty-badge">
                 {roadmapData.difficulty}
             </span>
-            </p>
+          </p>
           
           {/* Progress bar */}
           <div className="progress-card">
@@ -275,7 +473,7 @@ const VerticalGameDevRoadmap = () => {
           </div>
         )}
 
-        {/* Expanded Step Overlay */}
+        {/* Expanded Step Overlay - keeping your existing modal code */}
         {expandedStep && (
           <div className="overlay">
             <div className="modal">
@@ -293,7 +491,7 @@ const VerticalGameDevRoadmap = () => {
                 </button>
               </div>
 
-              {/* Content */}
+              {/* Modal content - keeping your existing content */}
               <div className="modal-content">
                 <div className="modal-grid">
                   <div className="modal-card">
@@ -374,25 +572,139 @@ const VerticalGameDevRoadmap = () => {
                 )}
 
                 <div className="modal-actions">
-                  {!isStepCompleted(expandedStep.stepId) && (
+                  <div className="modal-actions-buttons">
+                    {!isStepCompleted(expandedStep.stepId) && (
+                      <button
+                        onClick={() => completeStep(expandedStep.stepId)}
+                        className="btn-complete"
+                      >
+                        Mark as Complete
+                      </button>
+                    )}
                     <button
-                      onClick={() => completeStep(expandedStep.stepId)}
-                      className="btn-complete"
+                      onClick={() => setExpandedStep(null)}
+                      className="btn-close"
                     >
-                      Mark as Complete
+                      Close
                     </button>
-                  )}
-                  <button
-                    onClick={() => setExpandedStep(null)}
-                    className="btn-close"
-                  >
-                    Close
-                  </button>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         )}
+
+        {/* Floating Chat Widget */}
+        <div className="floating-chat-widget">
+          {!chatOpen ? (
+            <button
+              onClick={() => {
+                console.log('Chat widget clicked');
+                setChatOpen(true);
+                initializeChat();
+              }}
+              className="chat-fab"
+              title={`Open ${roadmapData?.aiMentor?.name || 'Learning Mentor'}`}
+            >
+              <img src={mentorCharacter} alt="Chat Mentor" className="fab-icon" />
+            </button>
+          ) : (
+            <div className="chat-widget-expanded">
+              <div className="chat-header">
+                <div className="chat-header-info">
+                  <img src={mentorCharacter} alt="Chat Mentor" className="chat-header-icon" />
+                  <div>
+                    <h3>{roadmapData?.aiMentor?.name || 'Learning Mentor'}</h3>
+                    <p>Your AI Learning Companion</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setChatOpen(false)}
+                  className="chat-close"
+                >
+                  <X className="chat-close-icon" />
+                </button>
+              </div>
+
+              <div className="chat-messages">
+                {chatMessages.map((msg, index) => (
+                  <div key={index} className={`chat-message ${msg.type}`}>
+                    {msg.type === 'bot' && (
+                      
+                        <img src={mentorCharacter} alt="Chat Mentor" className="avatar-icon" />
+
+                      
+                    )}
+                    <div className="message-content">
+                      {msg.image && (
+                        <img 
+                          src={URL.createObjectURL(msg.image)} 
+                          alt="Uploaded" 
+                          className="message-image"
+                        />
+                      )}
+                      <div className="message-text">
+                        {msg.content.split('\n').map((line, i) => {
+                          if (line.startsWith('**') && line.endsWith('**')) {
+                            return <strong key={i}>{line.slice(2, -2)}</strong>;
+                          }
+                          if (line.startsWith('- ')) {
+                            return <div key={i} className="message-bullet">{line}</div>;
+                          }
+                          return <div key={i}>{line}</div>;
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                
+                {isTyping && (
+                  <div className="chat-message bot">
+                   
+                      <img src={mentorCharacter} alt="Chat Mentor" className="avatar-icon" />
+
+                    
+                    <div className="message-content">
+                      <div className="typing-indicator">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <form onSubmit={handleChatSubmit} className="chat-input-form">
+                <div className="chat-input-container">
+                  <input
+                    type="text"
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    placeholder="Ask for help, share progress, or upload a screenshot..."
+                    className="chat-input"
+                  />
+                  <label className="image-upload-button">
+                    <Image className="upload-icon" />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      style={{ display: 'none' }}
+                    />
+                  </label>
+                  <button 
+                    type="submit" 
+                    disabled={!chatInput.trim() || isTyping}
+                    className="chat-send-button"
+                  >
+                    <Send className="send-icon" />
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

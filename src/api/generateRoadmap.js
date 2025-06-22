@@ -49,14 +49,14 @@ export async function generateRoadmap(formData) {
             },
             "worlds": [
                 {
-                    "worldId": "number // UNIQUE ID across ALL worlds. Start from 1 and increment for each world (1, 2, 3, 4, etc.)",
+                    "worldId": "number // Start from 1 and increment for each world (1, 2, 3, 4, etc.)",
                     "title": "string // Title for this phase/module",
                     "description": "string // Brief description of this world/phase",
                     "duration": "string // Estimated duration for this world/phase (e.g., 'Days 1-10', 'Week 1-2')",
                     "color": "string // A hex color code (e.g., '#8B5CF6'). Generate a suitable color.",
                     "steppingStones": [
                         {
-                        "stepId": "number // Sequential ID within the world, starting from 1",
+                        "stepId": "number // IMPORTANT: Sequential ID across ALL worlds and steps, never restarting. First step in entire project = 1, second step = 2, third step = 3, etc. Continue incrementing across all worlds.",
                         "title": "string // Title for this task/step",
                         "description": "string // Detailed description of what needs to be done",
                         "estimatedTime": "string // Estimated time to complete (e.g., '3 hours', '2 days')",
@@ -74,6 +74,12 @@ export async function generateRoadmap(formData) {
                 }
             ]
         }
+
+        EXAMPLE stepId numbering:
+        World 1: steps have stepId 1, 2, 3
+        World 2: steps have stepId 4, 5, 6, 7
+        World 3: steps have stepId 8, 9, 10
+        (Continue this pattern - never restart numbering)
 
         Generate ONLY the JSON object following this exact structure.
     `;

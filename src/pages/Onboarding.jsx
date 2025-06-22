@@ -196,7 +196,7 @@ export default function Onboarding() {
             <BookOpen className="absolute left-3 top-3 h-5 w-5 text-orange-500" />
             <textarea 
               name="learningGoals" 
-              placeholder="What specific skills do you want to learn or improve? (e.g., web developement...)" 
+              placeholder="What do you hope to gain from this project? (e.g., learn industry-standard tools, explore a new skill...)" 
               value={formData.learningGoals} 
               onChange={handleChange} 
               rows={3}
