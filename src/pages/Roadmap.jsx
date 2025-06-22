@@ -21,11 +21,7 @@ const VerticalGameDevRoadmap = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [expandedStep, setExpandedStep] = useState(null);
 
-<<<<<<< HEAD
 
-
-=======
->>>>>>> 78bc1e475b2e9d51c27200f303d26dbab4d6e823
   const iconMap = {
     1: Target,      // Setup
     2: Code,        // Engine Concepts
