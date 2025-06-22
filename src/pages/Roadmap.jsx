@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { CheckCircle, PawPrint, User, Book, Target, Award, Clock, Star, Trophy, Gamepad2, Code, Palette, Bug, X, BarChart3, Send, Image, MapPin} from 'lucide-react';
+import { CheckCircle, Calendar, User, Book, Target, Award, Clock, Star, Trophy, Gamepad2, Code, Palette, Bug, X, Play, BarChart3, MessageCircle, Send, Image, Sparkles } from 'lucide-react';
 import Anthropic from '@anthropic-ai/sdk';
 import mentorCharacter from '../assets/chatpal.png'; // adjust path as needed
 
@@ -12,17 +12,20 @@ const anthropic = new Anthropic({
   dangerouslyAllowBrowser: true // Required for browser usage
 });
 
+
+
 const VerticalGameDevRoadmap = () => {
   const { state } = useLocation();
   const navigate = useNavigate();
   const roadmapData = useMemo(() => state?.roadmap, [state]);
   
-  
   useEffect(() => {
     if (!roadmapData) {
       navigate('/');
     }
+    
   }, [roadmapData, navigate]);
+
 
   // State variables
   const [completedSteps, setCompletedSteps] = useState([]);
@@ -33,12 +36,12 @@ const VerticalGameDevRoadmap = () => {
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [completedActivities, setCompletedActivities] = useState({});
 
   // Early return if no roadmap data
   if (!roadmapData) {
     return <div>Loading...</div>;
   }
-  console.log(JSON.stringify(roadmapData, null, 2));
 
   const iconMap = {
     1: Target,      // Setup
@@ -125,6 +128,24 @@ const VerticalGameDevRoadmap = () => {
     }
     setExpandedStep(null);
   };
+  const toggleActivity = (stepId, activityIndex) => {
+  const activityKey = `${stepId}-${activityIndex}`;
+  setCompletedActivities(prev => {
+    const updated = {
+      ...prev,
+      [activityKey]: !prev[activityKey]
+    };
+    // Save to localStorage immediately
+    localStorage.setItem('roadmap-completed-activities', JSON.stringify(updated));
+    return updated;
+  });
+};
+
+// Function to check if activity is completed
+const isActivityCompleted = (stepId, activityIndex) => {
+  const activityKey = `${stepId}-${activityIndex}`;
+  return completedActivities[activityKey] || false;
+};
 
   // Helper function to convert file to base64
   const fileToBase64 = (file) => {
@@ -150,29 +171,29 @@ const VerticalGameDevRoadmap = () => {
     const aiPersonality = roadmapData?.aiMentor?.personality || 'encouraging and supportive';
     
     return `You are ${aiName}, an experienced and ${aiPersonality} mentor helping someone learn through a structured roadmap called "${roadmapTitle}".
-      CURRENT CONTEXT:
-      - Student is on Step ${currentStep}${currentStepData ? `: "${currentStepData.title}"` : ''}
-      ${currentStepData ? `- World: ${currentStepData.worldTitle}
-      - Difficulty: ${currentStepData.difficulty}/5
-      - Estimated Time: ${currentStepData.estimatedTime}` : ''}
-      - Progress: ${completedSteps.length}/${totalSteps} steps completed (${currentXP} XP earned)
 
-      YOUR ROLE:
-      - Be encouraging and supportive
-      - Provide specific, actionable advice
-      - Help troubleshoot issues
-      - Explain concepts clearly for beginners
-      - Suggest resources when helpful
-      - Celebrate progress and achievements
+CURRENT CONTEXT:
+- Student is on Step ${currentStep}${currentStepData ? `: "${currentStepData.title}"` : ''}
+${currentStepData ? `- World: ${currentStepData.worldTitle}
+- Difficulty: ${currentStepData.difficulty}/5
+- Estimated Time: ${currentStepData.estimatedTime}` : ''}
+- Progress: ${completedSteps.length}/${totalSteps} steps completed (${currentXP} XP earned)
 
-      TONE:
-      - Friendly and approachable
-      - Use appropriate terminology for the subject matter
-      - Include relevant emojis occasionally
-      - Be concise but thorough
+YOUR ROLE:
+- Be encouraging and supportive
+- Provide specific, actionable advice
+- Help troubleshoot issues
+- Explain concepts clearly for beginners
+- Suggest resources when helpful
+- Celebrate progress and achievements
 
-      Remember: Your goal is to help them succeed in their learning journey while building confidence for the path ahead.
-    `;
+TONE:
+- Friendly and approachable
+- Use appropriate terminology for the subject matter
+- Include relevant emojis occasionally
+- Be concise but thorough
+
+Remember: Your goal is to help them succeed in their learning journey while building confidence for the path ahead.`;
   }
 
   // UPDATED: Direct Claude API call function
@@ -322,6 +343,7 @@ const VerticalGameDevRoadmap = () => {
     const isAccessible = isStepAccessible(step.stepId);
     const isCurrent = step.stepId === getCurrentStep();
     const isFinalStep = step.stepId === totalSteps;
+    const Icon = iconMap[step.stepId];
     
     return (
       <div key={step.stepId} className="step-container">
@@ -347,20 +369,12 @@ const VerticalGameDevRoadmap = () => {
           onMouseLeave={() => setHoveredStep(null)}
           onClick={() => handleStepClick(step)}
         >
-          {isFinalStep ? (
-            <Trophy className="step-icon" />
-          ) : isCompleted ? (
+          {isCompleted ? (
             <CheckCircle className="step-icon" />
-          ) : isCurrent ? (
-            <MapPin className="step-icon" />
           ) : (
-            <PawPrint
-               className="step-icon"
-               style={{
-                transform: `rotate(180deg) ${step.stepId % 2 === 0 ? 'scaleX(-1)' : ''}`,
-              }}
-            />
+            <Icon className="step-icon" />
           )}
+          
           {/* Step number badge */}
           <div className={`step-badge ${isCompleted ? 'step-badge-completed' : 'step-badge-default'}`}>
             {step.stepId}
@@ -525,20 +539,50 @@ const VerticalGameDevRoadmap = () => {
                 </div>
 
                 <div className="modal-section">
-                  <h3>Activities</h3>
-                  <div className="activities-list">
-                    {expandedStep.activities?.map((activity, index) => (
-                      <div key={index} className="activity-item">
-                        <div className="activity-number">
-                          {index + 1}
-                        </div>
-                        <span className="activity-text">{activity}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+  <h3>Activities</h3>
+  <div className="activities-list">
+    {expandedStep.activities?.map((activity, index) => {
+      const isCompleted = isActivityCompleted(expandedStep.stepId, index);
+      return (
+        <div 
+          key={index} 
+          className={`activity-item ${isCompleted ? 'activity-completed' : ''}`}
+          onClick={() => toggleActivity(expandedStep.stepId, index)}
+        >
+          <div className={`activity-checkbox ${isCompleted ? 'checked' : ''}`}>
+            {isCompleted ? '✓' : index + 1}
+          </div>
+          <span className="activity-text">{activity}</span>
+        </div>
+      );
+    })}
+  </div>
+</div>
 
-                {expandedStep.deliverable && (
+                
+                
+                {expandedStep.resources && expandedStep.resources.length > 0 && (
+                  <div className="modal-section">
+                    <h3>Learning Resources</h3>
+                    <div className="resources-grid">
+                      {expandedStep.resources.map((resource, index) => {
+                        
+                        return (
+                          <div key={index} className="resource-tip-card">
+                            <div className="resource-tip-header">
+      
+                              <h4>Tip {index + 1}</h4>
+                            </div>
+                            <div className="resource-tip-content">
+                              <p>{resource}</p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+{expandedStep.deliverable && (
                   <div className="modal-section">
                     <h3>Deliverable</h3>
                     <div className="deliverable-box">
@@ -546,6 +590,7 @@ const VerticalGameDevRoadmap = () => {
                     </div>
                   </div>
                 )}
+                
 
                 {expandedStep.rewards && (
                   <div className="modal-section">
@@ -563,7 +608,7 @@ const VerticalGameDevRoadmap = () => {
                         )}
                         {expandedStep.rewards.badge && (
                           <div className="reward-unlock">
-                            🏆 Badge: {expandedStep.rewards.badge}
+                            🏆 Badge: {expandedStep.rewards.badge} 
                           </div>
                         )}
                       </div>
