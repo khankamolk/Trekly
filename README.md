@@ -1,6 +1,6 @@
 # Trekly
 
-## Installing Dependencies
+## Setting Up
 
 Create `.env` from template file.
 ```
