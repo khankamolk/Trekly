@@ -371,8 +371,12 @@ export default function Onboarding() {
                   >
                     {isLoading ? (
                       <>
-                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                        Generating...
+                        <div className="flex items-center gap-2">
+                          <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                          <span className="font-medium animate-pulse">
+                            This might take a few seconds. Generating<span className="animate-dots">...</span>
+                          </span>
+                        </div>
                       </>
                     ) : (
                       <>

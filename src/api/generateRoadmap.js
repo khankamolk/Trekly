@@ -1,14 +1,121 @@
 import { GoogleGenAI } from '@google/genai';
 
-export async function generateRoadmap(formData) {
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-
-    if (!apiKey) {
-        throw new Error('GEMINI API key is missing.');
+class APIKeyError extends Error {
+    constructor(message) {
+        super(message);
+        this.name = 'APIKeyError';
     }
+}
 
+class JSONParseError extends Error {
+    constructor(message, rawResponse) {
+        super(message);
+        this.name = 'JSONParseError';
+        this.rawResponse = rawResponse;
+    }
+}
+
+class ValidationError extends Error {
+    constructor(message, missingFields) {
+        super(message);
+        this.name = 'ValidationError';
+        this.missingFields = missingFields;
+    }
+}
+
+
+// Validate the generated roadmap structure
+function validateRoadmapStructure(roadmap) {
+    const requiredProps = ['title', 'totalDuration', 'difficulty', 'avatar', 'worlds'];
+    const missingFields = [];
+    
+    for (const prop of requiredProps) {
+        if (!roadmap[prop]) {
+            missingFields.push(prop);
+        }
+    }
+    
+    if (missingFields.length > 0) {
+        throw new ValidationError(
+            `Roadmap is missing required fields: ${missingFields.join(', ')}`,
+            missingFields
+        );
+    }
+    
+    if (!Array.isArray(roadmap.worlds) || roadmap.worlds.length === 0) {
+        throw new ValidationError('Worlds must be a non-empty array', ['worlds']);
+    }
+    
+    // Validate each world has required properties
+    roadmap.worlds.forEach((world, index) => {
+        const worldRequiredProps = ['worldId', 'title', 'description', 'steppingStones'];
+        const worldMissingFields = [];
+        
+        worldRequiredProps.forEach(prop => {
+            if (!world[prop]) {
+                worldMissingFields.push(`world[${index}].${prop}`);
+            }
+        });
+        
+        if (worldMissingFields.length > 0) {
+            throw new ValidationError(
+                `World ${index + 1} is missing required fields: ${worldMissingFields.join(', ')}`,
+                worldMissingFields
+            );
+        }
+        
+        if (!Array.isArray(world.steppingStones) || world.steppingStones.length === 0) {
+            throw new ValidationError(
+                `World ${index + 1} must have at least one stepping stone`,
+                [`world[${index}].steppingStones`]
+            );
+        }
+    });
+}
+
+// Clean and parse JSON response
+function cleanAndParseJSON(jsonStr) {
+    // Remove markdown code blocks if present
+    let cleaned = jsonStr.trim();
+    const codeBlockMatch = cleaned.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/);
+    if (codeBlockMatch) {
+        cleaned = codeBlockMatch[1].trim();
+    }
+    
+    // Remove any leading/trailing non-JSON content
+    const startIndex = cleaned.indexOf('{');
+    const endIndex = cleaned.lastIndexOf('}');
+    
+    if (startIndex === -1 || endIndex === -1 || startIndex >= endIndex) {
+        throw new JSONParseError('No valid JSON object found in response', cleaned);
+    }
+    
+    cleaned = cleaned.substring(startIndex, endIndex + 1);
+    
+    try {
+        const parsed = JSON.parse(cleaned);
+        validateRoadmapStructure(parsed);
+        return parsed;
+    } catch (error) {
+        if (error instanceof SyntaxError) {
+            throw new JSONParseError(`Invalid JSON syntax: ${error.message}`, cleaned);
+        }
+        throw error;
+    }
+}
+
+// Enhanced generateRoadmap function with retry logic
+export async function generateRoadmap(formData, onProgress = null) {
+    const MAX_RETRIES = 3;
+    const RETRY_DELAY = 1000; 
+    
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    if (!apiKey) {
+        throw new APIKeyError('GEMINI API key is missing. Please check your environment configuration.');
+    }
+    
     const ai = new GoogleGenAI({ apiKey });
-
+    
     const prompt = `
         System Prompt:
         You are an expert project planning assistant. Your task is to generate a comprehensive, step-by-step project roadmap based on user-provided details. The output MUST be a valid JSON object adhering to the schema provided below. Do not include any explanatory text, comments, or markdown formatting like \`\`\`json around the JSON object itself.
@@ -35,7 +142,7 @@ export async function generateRoadmap(formData) {
         - Current Skills/Tools: ${formData.currentSkills || 'Not specified'}
         - Learning Goals from Project: ${formData.learningGoals || 'Not specified'}
         - Desired Project Name: ${formData.projectName} 
-        - Autogenerate name: ${formData.projectName} (If value is true, please generate a creative and relevant project name based on the project goal, else use the given desired project name)
+        - Autogenerate name: ${formData.projectName === 'true' ? 'true' : 'false'} (If value is true, please generate a creative and relevant project name based on the project goal, else use the given desired project name)
 
         JSON Schema to follow strictly:
         {
@@ -83,23 +190,95 @@ export async function generateRoadmap(formData) {
 
         Generate ONLY the JSON object following this exact structure.
     `;
+    
+    let lastError = null;
+    
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+        try {
+            // Update progress
+            if (onProgress) {
+                onProgress({
+                    status: 'generating',
+                    attempt,
+                    maxAttempts: MAX_RETRIES,
+                    message: attempt === 1 
+                        ? 'Generating your personalized roadmap...' 
+                        : `Retry attempt ${attempt}/${MAX_RETRIES}...`
+                });
+            }
+            
+            const response = await ai.models.generateContent({
+                model: 'gemini-2.5-flash-preview-04-17',
+                contents: prompt,
+                config: { responseMimeType: "application/json" },
+            });
+            
+            if (!response || !response.text) {
+                throw new Error('Empty response from API');
+            }
+            
+            const roadmap = cleanAndParseJSON(response.text.trim());
+            
+            // Success! Update progress and return
+            if (onProgress) {
+                onProgress({
+                    status: 'success',
+                    message: 'Roadmap generated successfully!'
+                });
+            }
+            
+            return roadmap;
+            
+        } catch (error) {
+            lastError = error;
+            console.error(`Attempt ${attempt} failed:`, error);
+            
+            // Don't retry validation errors or API key errors
+            if (error instanceof ValidationError || error instanceof APIKeyError) {
+                throw error;
+            }
+            
+            // If this isn't the last attempt, wait before retrying
+            if (attempt < MAX_RETRIES) {
+                const delay = RETRY_DELAY * Math.pow(2, attempt - 1); // Exponential backoff
+                
+                if (onProgress) {
+                    onProgress({
+                        status: 'retrying',
+                        attempt,
+                        maxAttempts: MAX_RETRIES,
+                        message: `Attempt ${attempt} failed. Retrying in ${delay/1000} seconds...`,
+                        error: error.message
+                    });
+                }
+                
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
+        }
+    }
+    
+    const errorMessage = getError(lastError);
+    throw new Error(errorMessage);
+}
 
-    const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash-preview-04-17',
-        contents: prompt,
-        config: { responseMimeType: "application/json" },
-    });
-
-    let jsonStr = response.text.trim();
-    const match = jsonStr.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/);
-    if (match) {
-      jsonStr = match[1].trim();
+// Generate user-friendly error messages
+function getError(error) {
+    if (error instanceof APIKeyError) {
+        return 'API configuration error. Please check your setup and try again.';
     }
 
-    try {
-        const parsed = JSON.parse(jsonStr);
-        return parsed;
-    } catch (err) {
-        throw new Error('Invalid JSON returned: ' + jsonStr);
+    if (error instanceof JSONParseError) {
+        return 'We encountered an issue generating your roadmap. Please try submitting your form again with slightly different details.';
     }
+    
+    if (error.message.includes('quota') || error.message.includes('rate limit')) {
+        return 'Service is temporarily busy. Please wait a moment and try again.';
+    }
+    
+    if (error.message.includes('network') || error.message.includes('fetch')) {
+        return 'Network connection issue. Please check your internet connection and try again.';
+    }
+    
+    // Generic fallback
+    return 'We encountered an unexpected issue generating your roadmap. Please try again, and if the problem persists, try adjusting your project details slightly.';
 }

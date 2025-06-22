@@ -264,23 +264,23 @@ const VerticalGameDevRoadmap = () => {
       const currentStepData = allSteps.find(s => s.stepId === getCurrentStep());
       const aiName = roadmapData?.aiMentor?.name || 'Learning Mentor';
       const welcomeMessage = `Hi! I'm ${aiName}
+      
+      Welcome to ${roadmapData.title}! 
 
-Welcome to ${roadmapData.title}! 
+      Your current progress:
+      - ✅ You've completed ${completedSteps.length}/${totalSteps} steps
+      - 🏆 You've earned ${currentXP} XP so far
+      - 🎯 Next step: ${currentStepData ? `${currentStepData.title} (Step ${currentStepData.stepId})` : 'All steps completed! 🎉'}
 
-Your current progress:
-- ✅ You've completed ${completedSteps.length}/${totalSteps} steps
-- 🏆 You've earned ${currentXP} XP so far
-- 🎯 Next step: ${currentStepData ? `${currentStepData.title} (Step ${currentStepData.stepId})` : 'All steps completed! 🎉'}
+      How can I help you today? I can:
+      - Explain concepts in detail
+      - Help troubleshoot issues
+      - Review your progress
+      - Analyze screenshots of your work
+      - Guide you through any step
+      - Answer questions about your learning journey
 
-How can I help you today? I can:
-- Explain concepts in detail
-- Help troubleshoot issues
-- Review your progress
-- Analyze screenshots of your work
-- Guide you through any step
-- Answer questions about your learning journey
-
-What would you like assistance with?`;
+      What would you like assistance with?`;
 
       setChatMessages([{ type: 'bot', content: welcomeMessage }]);
     }
