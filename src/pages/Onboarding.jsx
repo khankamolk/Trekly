@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { generateRoadmap } from '../api/generateRoadmap';
-import { ChevronRight, ChevronLeft, Target, Calendar, User, BookOpen, Sparkles, Clock, Award, Brain } from 'lucide-react';
+import { X, ChevronRight, ChevronLeft, Target, Calendar, User, BookOpen, Sparkles, Clock, Award, Brain } from 'lucide-react';
 
 export default function Onboarding() {
   const [formData, setFormData] = useState({
@@ -13,8 +13,8 @@ export default function Onboarding() {
     experienceLevel: '',
     currentSkills: '',
     learningGoals: '',
-    learningPreferences: '',
     projectName: '',
+    autoGenerateName: '',
   });
 
   const [step, setStep] = useState(0);
@@ -25,7 +25,16 @@ export default function Onboarding() {
   const totalSteps = 4;
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value, type, checked } = e.target;
+    if (type === 'checkbox') {
+      setFormData({ 
+        ...formData, 
+        [name]: checked,
+        ...(name === 'autoGenerateName' && checked && { projectName: '' })
+      });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
   };
 
   const handleNext = () => setStep((prev) => prev + 1);
@@ -81,7 +90,7 @@ export default function Onboarding() {
           <Target className="absolute left-3 top-3 h-5 w-5 text-violet-500" />
           <input 
             name="projectGoal" 
-            placeholder="What's your main project goal? (e.g., Build a mobile app, Learn data science)" 
+            placeholder="What's your main goal? (e.g., launch a zine, build a game, start a podcast)"
             value={formData.projectGoal} 
             onChange={handleChange} 
             className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all duration-200 bg-white/80 backdrop-blur-sm" 
@@ -91,7 +100,7 @@ export default function Onboarding() {
           <Brain className="absolute left-3 top-3 h-5 w-5 text-violet-500" />
           <textarea 
             name="initialIdeas" 
-            placeholder="Share any initial ideas or specific features you have in mind..." 
+            placeholder="Got an idea already brewing? Any blockers? Tell us more..." 
             value={formData.initialIdeas} 
             onChange={handleChange} 
             rows={4}
@@ -170,7 +179,7 @@ export default function Onboarding() {
           <User className="absolute left-3 top-3 h-5 w-5 text-emerald-500" />
           <textarea 
             name="currentSkills" 
-            placeholder="List your current relevant skills (e.g., JavaScript, Python, UI/UX design, project management...)" 
+            placeholder="What are you good at? Could be sketching, editing videos, organizing people, baking sourdough..." 
             value={formData.currentSkills} 
             onChange={handleChange} 
             rows={4}
@@ -183,44 +192,59 @@ export default function Onboarding() {
     // Step 4: Learning & Project Details
     <div className="space-y-6" key="step4">
       <div className="space-y-4">
-        <div className="relative">
-          <BookOpen className="absolute left-3 top-3 h-5 w-5 text-orange-500" />
-          <textarea 
-            name="learningGoals" 
-            placeholder="What specific skills do you want to learn or improve? (e.g., React development, machine learning, design thinking...)" 
-            value={formData.learningGoals} 
-            onChange={handleChange} 
-            rows={3}
-            className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 bg-white/80 backdrop-blur-sm resize-none" 
-          />
-        </div>
-        <div className="relative">
-          <Brain className="absolute left-3 top-3 h-5 w-5 text-orange-500" />
-          <select 
-            name="learningPreferences" 
-            value={formData.learningPreferences} 
-            onChange={handleChange} 
-            className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 bg-white/80 backdrop-blur-sm appearance-none cursor-pointer"
-          >
-            <option value="">How do you prefer to learn?</option>
-            <option value="Hands-on projects">Hands-on projects</option>
-            <option value="Video tutorials">Video tutorials</option>
-            <option value="Reading documentation">Reading documentation</option>
-            <option value="Interactive courses">Interactive courses</option>
-            <option value="Mentorship">Mentorship</option>
-            <option value="Mixed approach">Mixed approach</option>
-          </select>
-        </div>
-        <div className="relative">
-          <Sparkles className="absolute left-3 top-3 h-5 w-5 text-orange-500" />
-          <input 
-            name="projectName" 
-            placeholder="Give your project a memorable name" 
-            value={formData.projectName} 
-            onChange={handleChange} 
-            className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 bg-white/80 backdrop-blur-sm" 
-          />
-        </div>
+          <div className="relative">
+            <BookOpen className="absolute left-3 top-3 h-5 w-5 text-orange-500" />
+            <textarea 
+              name="learningGoals" 
+              placeholder="What do you hope to gain from this project? (e.g., learn industry-standard tools, explore a new skill...)" 
+              value={formData.learningGoals} 
+              onChange={handleChange} 
+              rows={3}
+              className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200 bg-white/80 backdrop-blur-sm resize-none" 
+            />
+          </div>
+          <div className="relative">
+            <Sparkles className="absolute left-3 top-3 h-5 w-5 text-orange-500" />
+            <input 
+              name="projectName"
+              placeholder={formData.autoGenerateName ? "We'll generate a name for you!" : "Give your project a name"}
+              value={formData.autoGenerateName ? "" : formData.projectName}
+              onChange={handleChange}
+              disabled={formData.autoGenerateName}
+              className={`w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-300 backdrop-blur-sm ${
+                formData.autoGenerateName 
+                  ? 'bg-gray-100 text-gray-500 cursor-not-allowed opacity-75' 
+                  : 'bg-white/80 hover:bg-white'
+              }`}
+            />
+          </div>
+          {/* Auto-generate toggle */}
+          <div className="relative">
+            <div className="flex items-center space-x-3 mt-3">
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  id="autoGenerateName"
+                  name="autoGenerateName"
+                  checked={formData.autoGenerateName || false}
+                  onChange={handleChange}
+                  className="w-4 h-4 text-orange-500 bg-white border-gray-300 rounded focus:ring-orange-500 focus:ring-2 transition-colors"
+                />
+                <label 
+                  htmlFor="autoGenerateName" 
+                  className="ml-2 text-sm text-gray-700 cursor-pointer select-none hover:text-gray-900 transition-colors"
+                >
+                  Let us generate a name for your project
+                </label>
+              </div>
+              {formData.autoGenerateName && (
+                <div className="flex items-center text-xs text-orange-600">
+                  <Sparkles className="w-3 h-3 mr-1" />
+                  <span>AI-powered naming</span>
+                </div>
+              )}
+            </div>
+          </div>
       </div>
     </div>
   ];
@@ -242,7 +266,7 @@ export default function Onboarding() {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-white rounded-2xl shadow-lg mb-6">
             <Sparkles className="w-8 h-8 text-indigo-600" />
           </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Project Roadmap Generator</h1>
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">Trekly</h1>
           <p className="text-xl text-gray-600">Let's create a personalized learning journey for your project</p>
         </div>
 

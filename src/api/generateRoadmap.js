@@ -38,14 +38,14 @@ export async function generateRoadmap(formData) {
         User-Provided Details:
         - Project Goal: ${formData.projectGoal}
         - Initial Ideas/Resources/Blockers: ${formData.initialIdeas || 'Not specified'}
-        - Project Start Date: ${formData.startDate || 'Not specified'}
+        - Project Start Date: ${formData.startDate || 'Not specified'} 
         - Project End Date: ${formData.endDate || 'Not specified'}
         - Time Commitment: ${formData.timeCommitment || 'Not specified'}
         - Experience Level: ${formData.experienceLevel}
         - Current Skills/Tools: ${formData.currentSkills || 'Not specified'}
         - Learning Goals from Project: ${formData.learningGoals || 'Not specified'}
-        - Preferred Learning Styles: ${formData.learningPreferences || 'Not specified'}
-        - Desired Project Name: ${formData.projectName} (If empty, please generate a creative and relevant project name based on the project goal)
+        - Desired Project Name: ${formData.projectName} 
+        - Autogenerate name: ${formData.projectName} (If value is true, please generate a creative and relevant project name based on the project goal, else use the given desired project name)
 
         JSON Schema to follow strictly:
         {
@@ -59,7 +59,7 @@ export async function generateRoadmap(formData) {
             },
             "worlds": [
                 {
-                    "worldId": "number // Sequential ID, starting from 1",
+                    "worldId": "number // Start from 1 and increment for each world (1, 2, 3, 4, etc.)",
                     "title": "string // Title for this phase/module",
                     "description": "string // Brief description of this world/phase",
                     "duration": "string // Estimated duration for this world/phase (e.g., 'Days 1-10', 'Week 1-2')",
@@ -94,6 +94,11 @@ export async function generateRoadmap(formData) {
             "Practice Tip: Start with simple left/right movement before adding jumping or complex animations",
             "Common Mistake: Avoid using transform.Translate for physics-based movement - use Rigidbody2D.velocity instead"
         ]
+        EXAMPLE stepId numbering:
+        World 1: steps have stepId 1, 2, 3
+        World 2: steps have stepId 4, 5, 6, 7
+        World 3: steps have stepId 8, 9, 10
+        (Continue this pattern - never restart numbering)
 
         Generate ONLY the JSON object following this exact structure.
     `;
