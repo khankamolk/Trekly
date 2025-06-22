@@ -25,6 +25,16 @@ export async function generateRoadmap(formData) {
         - Do not use markdown formatting like \`\`\`json
         - Escape any quotes within strings using \"
 
+        RESOURCES REQUIREMENTS:
+        - Each step should include 2-3 helpful learning tips in the "resources" array
+        - Tips should be practical, actionable advice specific to the step's content
+        - Include specific search suggestions (e.g., "YouTube Search: 'React hooks tutorial 2024'")
+        - Include learning strategies and best practices
+        - Include common pitfalls to avoid
+        - Include tools or techniques that would help with this specific step
+        - Make each tip concise but valuable (1-2 sentences max)
+        - DO NOT include actual URLs or links - only helpful guidance and search suggestions
+
         User-Provided Details:
         - Project Goal: ${formData.projectGoal}
         - Initial Ideas/Resources/Blockers: ${formData.initialIdeas || 'Not specified'}
@@ -56,24 +66,34 @@ export async function generateRoadmap(formData) {
                     "color": "string // A hex color code (e.g., '#8B5CF6'). Generate a suitable color.",
                     "steppingStones": [
                         {
-                        "stepId": "number // Sequential ID within the world, starting from 1",
-                        "title": "string // Title for this task/step",
-                        "description": "string // Detailed description of what needs to be done",
-                        "estimatedTime": "string // Estimated time to complete (e.g., '3 hours', '2 days')",
-                        "difficulty": "number // Task difficulty rating from 1 (easy) to 5 (very hard)",
-                        "activities": ["string"],
-                        "deliverable": "string // Tangible output for this step",
-                        "resources": ["string"],
-                        "successCriteria": "string // How to know this step is completed",
-                        "rewards": {
-                            "xp": "number",
-                            "badge": "string (optional)",
-                            "skillUnlock": "string (optional)"
+                            "stepId": "number // Sequential ID within the world, starting from 1",
+                            "title": "string // Title for this task/step",
+                            "description": "string // Detailed description of what needs to be done",
+                            "estimatedTime": "string // Estimated time to complete (e.g., '3 hours', '2 days')",
+                            "difficulty": "number // Task difficulty rating from 1 (easy) to 5 (very hard)",
+                            "activities": ["string"], // Details interactive and actionable activities to achieve learning goal. Exactly three activities. Each activity 2 sentences.
+                            "deliverable": "string // Tangible output for this step",
+                            "resources": [
+                                "string // Include 2-3 helpful tips: search suggestions, best practices, tools, or learning strategies"
+                            ],
+                            "successCriteria": "string // How to know this step is completed",
+                            "rewards": {
+                                "xp": "number",
+                                "badge": "string (optional)",
+                                "skillUnlock": "string (optional)"
+                            }
                         }
                     ]
                 }
             ]
         }
+
+        EXAMPLE RESOURCES ARRAY:
+        "resources": [
+            "YouTube Search: 'Unity 2D character movement tutorial' - focus on tutorials that explain Rigidbody2D physics",
+            "Practice Tip: Start with simple left/right movement before adding jumping or complex animations",
+            "Common Mistake: Avoid using transform.Translate for physics-based movement - use Rigidbody2D.velocity instead"
+        ]
 
         Generate ONLY the JSON object following this exact structure.
     `;

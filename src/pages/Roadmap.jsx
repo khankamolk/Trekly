@@ -12,6 +12,8 @@ const anthropic = new Anthropic({
   dangerouslyAllowBrowser: true // Required for browser usage
 });
 
+
+
 const VerticalGameDevRoadmap = () => {
   const { state } = useLocation();
   const navigate = useNavigate();
@@ -32,6 +34,11 @@ const VerticalGameDevRoadmap = () => {
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [completedActivities, setCompletedActivities] = useState(() => {
+  // Load saved activities from localStorage on component mount
+  const saved = localStorage.getItem('roadmap-completed-activities');
+  return saved ? JSON.parse(saved) : {};
+});
 
   // Early return if no roadmap data
   if (!roadmapData) {
@@ -123,6 +130,24 @@ const VerticalGameDevRoadmap = () => {
     }
     setExpandedStep(null);
   };
+  const toggleActivity = (stepId, activityIndex) => {
+  const activityKey = `${stepId}-${activityIndex}`;
+  setCompletedActivities(prev => {
+    const updated = {
+      ...prev,
+      [activityKey]: !prev[activityKey]
+    };
+    // Save to localStorage immediately
+    localStorage.setItem('roadmap-completed-activities', JSON.stringify(updated));
+    return updated;
+  });
+};
+
+// Function to check if activity is completed
+const isActivityCompleted = (stepId, activityIndex) => {
+  const activityKey = `${stepId}-${activityIndex}`;
+  return completedActivities[activityKey] || false;
+};
 
   // Helper function to convert file to base64
   const fileToBase64 = (file) => {
@@ -506,7 +531,7 @@ What would you like assistance with?`;
                       <Trophy className="modal-card-icon" />
                       <span className="modal-card-title">Reward</span>
                     </div>
-                    <span className="modal-card-content">{expandedStep.rewards?.xp || 0} XP</span>
+                    <span className="modal-card-content">{expandedStep.rewards?.xp || 0} XP - Keep up the good work!</span>
                   </div>
                 </div>
 
@@ -516,20 +541,50 @@ What would you like assistance with?`;
                 </div>
 
                 <div className="modal-section">
-                  <h3>Activities</h3>
-                  <div className="activities-list">
-                    {expandedStep.activities?.map((activity, index) => (
-                      <div key={index} className="activity-item">
-                        <div className="activity-number">
-                          {index + 1}
-                        </div>
-                        <span className="activity-text">{activity}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+  <h3>Activities</h3>
+  <div className="activities-list">
+    {expandedStep.activities?.map((activity, index) => {
+      const isCompleted = isActivityCompleted(expandedStep.stepId, index);
+      return (
+        <div 
+          key={index} 
+          className={`activity-item ${isCompleted ? 'activity-completed' : ''}`}
+          onClick={() => toggleActivity(expandedStep.stepId, index)}
+        >
+          <div className={`activity-checkbox ${isCompleted ? 'checked' : ''}`}>
+            {isCompleted ? '✓' : index + 1}
+          </div>
+          <span className="activity-text">{activity}</span>
+        </div>
+      );
+    })}
+  </div>
+</div>
 
-                {expandedStep.deliverable && (
+                
+                
+                {expandedStep.resources && expandedStep.resources.length > 0 && (
+                  <div className="modal-section">
+                    <h3>Learning Resources</h3>
+                    <div className="resources-grid">
+                      {expandedStep.resources.map((resource, index) => {
+                        
+                        return (
+                          <div key={index} className="resource-tip-card">
+                            <div className="resource-tip-header">
+      
+                              <h4>Tip {index + 1}</h4>
+                            </div>
+                            <div className="resource-tip-content">
+                              <p>{resource}</p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+{expandedStep.deliverable && (
                   <div className="modal-section">
                     <h3>Deliverable</h3>
                     <div className="deliverable-box">
@@ -537,6 +592,7 @@ What would you like assistance with?`;
                     </div>
                   </div>
                 )}
+                
 
                 {expandedStep.rewards && (
                   <div className="modal-section">
@@ -554,7 +610,7 @@ What would you like assistance with?`;
                         )}
                         {expandedStep.rewards.badge && (
                           <div className="reward-unlock">
-                            🏆 Badge: {expandedStep.rewards.badge}
+                            🏆 Badge: {expandedStep.rewards.badge} 
                           </div>
                         )}
                       </div>

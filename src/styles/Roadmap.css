@@ -451,6 +451,7 @@
   color: #374151;
 }
 
+
 .activities-list {
   display: flex;
   flex-direction: column;
@@ -464,14 +465,29 @@
   padding: 0.75rem;
   background-color: #f9fafb;
   border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
 }
 
-.activity-number {
+.activity-item:hover {
+  background-color: #f3f4f6;
+  border-color: #e5e7eb;
+}
+
+.activity-item.activity-completed {
+  background-color: #f0f9ff;
+  border-color: #3b82f6;
+}
+
+.activity-item.activity-completed:hover {
+  background-color: #e0f2fe;
+}
+
+.activity-checkbox {
   width: 1.5rem;
   height: 1.5rem;
   border-radius: 50%;
-  background-color: #e0e7ff;
-  color: #6366f1;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -479,10 +495,70 @@
   font-weight: 500;
   flex-shrink: 0;
   margin-top: 0.125rem;
+  transition: all 0.2s ease;
+  border: 2px solid #e0e7ff;
+}
+
+/* Unchecked state */
+.activity-checkbox:not(.checked) {
+  background-color: #e0e7ff;
+  color: #6366f1;
+}
+
+/* Checked state */
+.activity-checkbox.checked {
+  background-color: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+  font-size: 1rem;
+  font-weight: 600;
 }
 
 .activity-text {
   color: #374151;
+  transition: all 0.2s ease;
+}
+
+.activity-completed .activity-text {
+  color: #1f2937;
+  text-decoration: line-through;
+  opacity: 0.8;
+}
+
+/* Hover effects */
+.activity-item:hover .activity-checkbox:not(.checked) {
+  background-color: #c7d2fe;
+  border-color: #a5b4fc;
+}
+
+.activity-item:hover .activity-checkbox.checked {
+  background-color: #2563eb;
+  border-color: #2563eb;
+}
+
+/* Focus states for accessibility */
+.activity-item:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Make sure the checklist is accessible */
+.activity-item {
+  position: relative;
+}
+
+.activity-item::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 0.5rem;
+  opacity: 0;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(147, 197, 253, 0.1));
+  transition: opacity 0.2s ease;
+}
+
+.activity-item:hover::before {
+  opacity: 1;
 }
 
 .deliverable-box {
@@ -939,5 +1015,91 @@
   }
   50% {
     opacity: 0.5;
+  }
+}
+
+/* Learning Resources Styles - Replace old resources CSS with this */
+
+.resources-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.resource-tip-card {
+  background: #f8fafc;
+  border-radius: 0.75rem; /* <- Rounded corners */
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.resource-tip-header {
+  background: #e9eff4;
+  padding: 0.5rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.resource-icon {
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.resource-tip-header h4 {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  background: #e9eff4;
+}
+
+.resource-tip-content {
+  padding: 1rem;
+}
+
+.resource-tip-content p {
+  margin: 0;
+  color: #475569;
+  line-height: 1.5;
+  font-size: 0.9rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .resources-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .resource-tip-card {
+    margin: 0;
+  }
+  
+  .resource-tip-header {
+    padding: 0.6rem 0.8rem;
+  }
+  
+  .resource-tip-content {
+    padding: 0.8rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .resources-grid {
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
+}
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .video-wrapper {
+    padding-bottom: 56.25%;
+  }
+  
+  .resource-item {
+    margin: 0 -1rem;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
   }
 }
