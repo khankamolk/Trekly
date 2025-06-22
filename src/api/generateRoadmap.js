@@ -28,14 +28,14 @@ export async function generateRoadmap(formData) {
         User-Provided Details:
         - Project Goal: ${formData.projectGoal}
         - Initial Ideas/Resources/Blockers: ${formData.initialIdeas || 'Not specified'}
-        - Project Start Date: ${formData.startDate || 'Not specified'}
+        - Project Start Date: ${formData.startDate || 'Not specified'} 
         - Project End Date: ${formData.endDate || 'Not specified'}
         - Time Commitment: ${formData.timeCommitment || 'Not specified'}
         - Experience Level: ${formData.experienceLevel}
         - Current Skills/Tools: ${formData.currentSkills || 'Not specified'}
         - Learning Goals from Project: ${formData.learningGoals || 'Not specified'}
-        - Preferred Learning Styles: ${formData.learningPreferences || 'Not specified'}
-        - Desired Project Name: ${formData.projectName} (If empty, please generate a creative and relevant project name based on the project goal)
+        - Desired Project Name: ${formData.projectName} 
+        - Autogenerate name: ${formData.projectName} (If value is true, please generate a creative and relevant project name based on the project goal, else use the given desired project name)
 
         JSON Schema to follow strictly:
         {
@@ -49,7 +49,7 @@ export async function generateRoadmap(formData) {
             },
             "worlds": [
                 {
-                    "worldId": "number // Sequential ID, starting from 1",
+                    "worldId": "number // UNIQUE ID across ALL worlds. Start from 1 and increment for each world (1, 2, 3, 4, etc.)",
                     "title": "string // Title for this phase/module",
                     "description": "string // Brief description of this world/phase",
                     "duration": "string // Estimated duration for this world/phase (e.g., 'Days 1-10', 'Week 1-2')",
