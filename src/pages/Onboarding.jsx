@@ -58,7 +58,7 @@ export default function Onboarding() {
   const stepConfig = [
     {
       title: "Define Your Vision",
-      subtitle: "Tell us about your project goals and initial thoughts",
+      subtitle: "Tell us about what you want to create",
       icon: Target,
       color: "from-violet-500 to-purple-600"
     },
@@ -90,7 +90,7 @@ export default function Onboarding() {
           <Target className="absolute left-3 top-3 h-5 w-5 text-violet-500" />
           <input 
             name="projectGoal" 
-            placeholder="What's your main goal? (e.g., launch a zine, build a game, start a podcast)"
+            placeholder="What do you want to create? (e.g., launch a zine, build a game, start a podcast)"
             value={formData.projectGoal} 
             onChange={handleChange} 
             className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-violet-500 focus:border-transparent transition-all duration-200 bg-white/80 backdrop-blur-sm" 
@@ -263,9 +263,6 @@ export default function Onboarding() {
       <div className="relative z-10 max-w-4xl mx-auto px-6 py-12">
         {/* Header */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-white rounded-2xl shadow-lg mb-6">
-            <Sparkles className="w-8 h-8 text-indigo-600" />
-          </div>
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Trekly</h1>
           <p className="text-xl text-gray-600">Let's create a personalized learning journey for your project</p>
         </div>

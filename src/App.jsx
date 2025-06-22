@@ -1,15 +1,28 @@
 import ReactDOM from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Onboarding from './pages/Onboarding.jsx'
-import Roadmap from "./pages/RoadMap.jsx";
+import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import {PackagePlus, Folder} from 'lucide-react';
 
-export default function App() {
+import Onboarding from './pages/Onboarding.jsx'
+import Roadmap from "./pages/Roadmap.jsx";
+
+// Main App Component
+function AppContent() {
   return (
-    <BrowserRouter>
+    <>
       <Routes>
         <Route path="/" element={<Onboarding />} />
         <Route path="/roadmap" element={<Roadmap />} />
       </Routes>
+    </>
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AppContent />
     </BrowserRouter>
   );
 }
