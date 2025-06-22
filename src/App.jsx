@@ -1,7 +1,7 @@
 import ReactDOM from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Roadmap from './pages/Roadmap.jsx'
 import Onboarding from './pages/Onboarding.jsx'
+import Roadmap from "./pages/RoadMap.jsx";
 
 export default function App() {
   return (
